@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Pomodoro Timer - Uma ferramenta para aumentar sua produtividade com o método Pomodoro">
+    <meta name="keywords" content="pomodoro, timer, produtividade, foco, técnica pomodoro">
+    <meta name="author" content="Seu Nome">
+    <meta name="theme-color" content="#e74c3c">
+    <title>Pomodoro Timer</title>
+    <!-- Favicon -->
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="manifest.json">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Analytics -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+
+        // Track timer events
+        function trackEvent(category, action, label) {
+            gtag('event', action, {
+                'event_category': category,
+                'event_label': label
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <header>
+        <h1>Pomodoro Timer</h1>
+    </header>
+
+    <main>
+        <section class="timer-container">
+            <div class="progress-circle">
+                <svg class="progress-ring" width="200" height="200">
+                    <circle class="progress-ring-bg" cx="100" cy="100" r="80"></circle>
+                    <circle class="progress-ring-circle" cx="100" cy="100" r="80" id="progress-ring-circle"></circle>
+                </svg>
+                <div class="timer-display">
+                    <span id="minutes">25</span>:<span id="seconds">00</span>
+                </div>
+            </div>
+            <div class="timer-mode">
+                <span id="current-mode">Trabalho</span>
+            </div>
+            <div class="timer-controls">
+                <button id="start-btn" class="btn">Iniciar</button>
+                <button id="pause-btn" class="btn">Pausar</button>
+                <button id="reset-btn" class="btn">Reiniciar</button>
+            </div>
+            <div class="session-counter">
+                <span>Sessões concluídas: <span id="session-count">0</span></span>
+            </div>
+        </section>
+
+        <section class="settings-container">
+            <h2>Configurações</h2>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="work-duration">Duração do trabalho (minutos):</label>
+                    <input type="number" id="work-duration" min="1" max="60" value="25">
+                </div>
+                <div class="form-group">
+                    <label for="short-break-duration">Pausa curta (minutos):</label>
+                    <input type="number" id="short-break-duration" min="1" max="30" value="5">
+                </div>
+                <div class="form-group">
+                    <label for="long-break-duration">Pausa longa (minutos):</label>
+                    <input type="number" id="long-break-duration" min="1" max="60" value="15">
+                </div>
+                <div class="form-group">
+                    <label for="sound-enabled">Notificações sonoras:</label>
+                    <input type="checkbox" id="sound-enabled" checked>
+                </div>
+                <button type="submit" class="btn">Salvar</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Pomodoro Timer | <a href="https://github.com/matheusdmlopes/pomodoro-timer-web"
+                target="_blank">GitHub</a></p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/settings.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
