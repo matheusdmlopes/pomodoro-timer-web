@@ -10,6 +10,18 @@ let timerStateData = {
     completedSessions: 0
 };
 
+// Event tracking for Google Tag Manager
+function trackEvent(category, action, label) {
+    if (window.dataLayer) {
+        dataLayer.push({
+            'event': 'pomodoro_event',
+            'event_category': category,
+            'event_action': action,
+            'event_label': label
+        });
+    }
+}
+
 // Save timer state to localStorage
 function saveTimerState() {
     // Only save state if the timer has been initialized
