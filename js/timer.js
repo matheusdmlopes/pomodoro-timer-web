@@ -2,34 +2,36 @@
  * Timer functionality for the Pomodoro Timer
  */
 
-// Timer states
-const TIMER_STATES = {
-    IDLE: 'idle',
-    RUNNING: 'running',
-    PAUSED: 'paused'
-};
-
 // Timer modes
 const TIMER_MODES = {
-    WORK: 'work',
-    SHORT_BREAK: 'shortBreak',
-    LONG_BREAK: 'longBreak'
+    POMODORO: 'pomodoro',
+    SHORT_BREAK: 'short-break',
+    LONG_BREAK: 'long-break'
 };
 
 // Map modes to display names
 const MODE_DISPLAY_NAMES = {
-    [TIMER_MODES.WORK]: 'Trabalho',
+    [TIMER_MODES.POMODORO]: 'Pomodoro',
     [TIMER_MODES.SHORT_BREAK]: 'Pausa Curta',
     [TIMER_MODES.LONG_BREAK]: 'Pausa Longa'
 };
 
-// Timer variables
-let timerState = TIMER_STATES.IDLE;
-let currentMode = TIMER_MODES.WORK;
-let timeLeft = 0; // in seconds
+// Timer state
+let timeLeft;
+let isRunning = false;
 let timerId = null;
+let currentMode = TIMER_MODES.POMODORO;
 let completedSessions = 0;
 let audioContext = null;
+let settings = {
+    workDuration: 25,
+    shortBreakDuration: 5,
+    longBreakDuration: 15,
+    soundEnabled: true,
+    showTimeInTitle: true,
+    soundType: 'beep',
+    soundVolume: 0.5
+};
 
 // DOM elements
 const minutesElement = document.getElementById('minutes');
@@ -40,31 +42,83 @@ const startButton = document.getElementById('start-btn');
 const pauseButton = document.getElementById('pause-btn');
 const resetButton = document.getElementById('reset-btn');
 const progressRing = document.getElementById('progress-ring-circle');
+const modeButtons = document.querySelectorAll('.mode-btn');
 
 // Progress ring variables
 let totalTime = 0;
 const progressRingCircumference = 2 * Math.PI * 80; // 2πr where r=80
 
+// Sound configurations
+const SOUND_CONFIGS = {
+    beep: {
+        frequency: 800,
+        type: 'sine'
+    },
+    bell: {
+        frequency: 440,
+        type: 'triangle'
+    },
+    alarm: {
+        frequency: 600,
+        type: 'square'
+    },
+    notification: {
+        frequency: 520,
+        type: 'sine'
+    }
+};
+
 // Initialize timer
 function initTimer() {
-    // Set initial time based on work duration
-    resetTimer();
+    loadSettings();
+    setupEventListeners();
+    resetTimer(); // This will set the initial time based on current mode
+}
 
-    // Add event listeners to buttons
+// Load settings from localStorage
+function loadSettings() {
+    const savedSettings = localStorage.getItem('pomodoroSettings');
+    if (savedSettings) {
+        settings = JSON.parse(savedSettings);
+    }
+
+    // Set initial time based on current mode
+    timeLeft = settings.workDuration * 60;
+}
+
+// Setup event listeners
+function setupEventListeners() {
     startButton.addEventListener('click', startTimer);
     pauseButton.addEventListener('click', pauseTimer);
     resetButton.addEventListener('click', resetTimer);
 
-    // Update UI
-    updateTimerDisplay();
-    updateModeDisplay();
-    updateProgressRing(1); // Initial state: full ring
+    // Add event listeners for mode buttons
+    modeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (!isRunning) {
+                switchMode(button.dataset.mode);
+            }
+        });
+    });
 }
 
-// Set timer duration based on current mode
-function setTimerDuration() {
-    switch (currentMode) {
-        case TIMER_MODES.WORK:
+// Switch timer mode
+function switchMode(mode) {
+    if (mode === currentMode) return;
+
+    // Update active button
+    modeButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.mode === mode);
+    });
+
+    // Always reload the latest settings from localStorage
+    loadSettings();
+
+    currentMode = mode;
+
+    // Set time based on mode
+    switch (mode) {
+        case TIMER_MODES.POMODORO:
             timeLeft = settings.workDuration * 60;
             break;
         case TIMER_MODES.SHORT_BREAK:
@@ -74,86 +128,76 @@ function setTimerDuration() {
             timeLeft = settings.longBreakDuration * 60;
             break;
     }
-    totalTime = timeLeft;
+
+    updateTimerDisplay();
+    updateModeDisplay();
+
+    // Track event
+    trackEvent('Timer', 'Switch Mode', mode);
 }
 
 // Start timer
 function startTimer() {
-    if (timerState === TIMER_STATES.RUNNING) return;
+    if (isRunning) return;
 
-    timerState = TIMER_STATES.RUNNING;
-
-    // Track timer start event if trackEvent function exists
-    if (typeof trackEvent === 'function') {
-        trackEvent('Timer', 'Start', currentMode);
-    }
-
-    // Clear any existing timer
-    if (timerId) {
-        clearInterval(timerId);
-    }
-
-    // Start new timer
-    const startTime = Date.now();
-    const initialTimeLeft = timeLeft;
-
+    isRunning = true;
     timerId = setInterval(() => {
-        // Calculate elapsed time precisely to avoid drift
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        timeLeft = initialTimeLeft - elapsed;
+        timeLeft--;
+        updateTimerDisplay();
 
         if (timeLeft <= 0) {
-            timeLeft = 0;
             clearInterval(timerId);
-            timerComplete();
+            isRunning = false;
+            playNotificationSound();
+            handleTimerComplete();
         }
+    }, 1000);
 
-        updateTimerDisplay();
-        updateProgressRing(timeLeft / totalTime);
-    }, 500); // Update every half second for smoother display
+    // Track event
+    trackEvent('Timer', 'Start', currentMode);
 }
 
 // Pause timer
 function pauseTimer() {
-    if (timerState !== TIMER_STATES.RUNNING) return;
+    if (!isRunning) return;
 
-    timerState = TIMER_STATES.PAUSED;
     clearInterval(timerId);
+    isRunning = false;
 
-    // Track timer pause event if trackEvent function exists
-    if (typeof trackEvent === 'function') {
-        trackEvent('Timer', 'Pause', currentMode);
-    }
+    // Track event
+    trackEvent('Timer', 'Pause', currentMode);
 }
 
 // Reset timer
 function resetTimer() {
-    timerState = TIMER_STATES.IDLE;
-    if (timerId) {
-        clearInterval(timerId);
+    clearInterval(timerId);
+    isRunning = false;
+
+    // Reload latest settings
+    loadSettings();
+
+    // Reset time based on current mode
+    switch (currentMode) {
+        case TIMER_MODES.POMODORO:
+            timeLeft = settings.workDuration * 60;
+            break;
+        case TIMER_MODES.SHORT_BREAK:
+            timeLeft = settings.shortBreakDuration * 60;
+            break;
+        case TIMER_MODES.LONG_BREAK:
+            timeLeft = settings.longBreakDuration * 60;
+            break;
     }
 
-    // Track timer reset event if trackEvent function exists
-    if (typeof trackEvent === 'function') {
-        trackEvent('Timer', 'Reset', currentMode);
-    }
-
-    // Set duration based on current mode
-    setTimerDuration();
     updateTimerDisplay();
-    updateProgressRing(1); // Full ring on reset
+
+    // Track event
+    trackEvent('Timer', 'Reset', currentMode);
 }
 
-// Timer complete
-function timerComplete() {
-    playNotificationSound();
-
-    // Track timer complete event if trackEvent function exists
-    if (typeof trackEvent === 'function') {
-        trackEvent('Timer', 'Complete', currentMode);
-    }
-
-    if (currentMode === TIMER_MODES.WORK) {
+// Handle timer completion
+function handleTimerComplete() {
+    if (currentMode === TIMER_MODES.POMODORO) {
         // Increment session count after work session
         completedSessions++;
         sessionCountElement.textContent = completedSessions;
@@ -165,13 +209,13 @@ function timerComplete() {
 
         // After 4 work sessions, take a long break
         if (completedSessions % 4 === 0) {
-            currentMode = TIMER_MODES.LONG_BREAK;
+            switchMode(TIMER_MODES.LONG_BREAK);
         } else {
-            currentMode = TIMER_MODES.SHORT_BREAK;
+            switchMode(TIMER_MODES.SHORT_BREAK);
         }
     } else {
         // After any break, go back to work mode
-        currentMode = TIMER_MODES.WORK;
+        switchMode(TIMER_MODES.POMODORO);
     }
 
     // Update mode display
@@ -192,8 +236,12 @@ function updateTimerDisplay() {
     minutesElement.textContent = minutes.toString().padStart(2, '0');
     secondsElement.textContent = seconds.toString().padStart(2, '0');
 
-    // Update page title
-    document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - Pomodoro Timer`;
+    // Update page title only if enabled in settings
+    if (settings.showTimeInTitle) {
+        document.title = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - Pomodoro Timer`;
+    } else {
+        document.title = 'Pomodoro Timer';
+    }
 }
 
 // Update mode display
@@ -205,39 +253,29 @@ function updateModeDisplay() {
 function playNotificationSound() {
     if (!settings.soundEnabled) return;
 
-    try {
-        // Lazy initialize AudioContext to avoid autoplay restrictions
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        // Create oscillator
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        // Set sound parameters
-        oscillator.type = 'sine';
-        oscillator.frequency.value = 800;
-        gainNode.gain.value = 0.1;
-
-        // Schedule the beeps
-        const now = audioContext.currentTime;
-        oscillator.start(now);
-        oscillator.stop(now + 0.8);
-
-        // Beep pattern: on-off-on-off-on
-        gainNode.gain.setValueAtTime(0.1, now);
-        gainNode.gain.setValueAtTime(0, now + 0.2);
-        gainNode.gain.setValueAtTime(0.1, now + 0.3);
-        gainNode.gain.setValueAtTime(0, now + 0.5);
-        gainNode.gain.setValueAtTime(0.1, now + 0.6);
-        gainNode.gain.setValueAtTime(0, now + 0.8);
-    } catch (error) {
-        console.error('Error playing notification sound:', error);
+    // Create audio context on first use (to comply with autoplay policies)
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
+
+    const soundConfig = SOUND_CONFIGS[settings.soundType];
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.type = soundConfig.type;
+    oscillator.frequency.setValueAtTime(soundConfig.frequency, audioContext.currentTime);
+
+    // Apply volume setting
+    const volume = settings.soundVolume;
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 1);
 }
 
 // Update progress ring
@@ -255,8 +293,17 @@ function updateProgressRing(progressFraction) {
     }
 }
 
+// Update settings
+function updateSettings(newSettings) {
+    settings = newSettings;
+    updateTimerDisplay(); // Immediately update the display to reflect new settings
+}
+
 // Initialize timer when the page loads
-document.addEventListener('DOMContentLoaded', function () {
-    // Wait for settings to load first
-    setTimeout(initTimer, 100);
+document.addEventListener('DOMContentLoaded', () => {
+    initTimer();
+    // Export timer functionality globally
+    window.timer = {
+        updateSettings
+    };
 }); 

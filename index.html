@@ -36,18 +36,18 @@
     <!-- End Google Tag Manager (noscript) -->
     <header>
         <h1>Pomodoro Timer</h1>
+        <button id="settings-btn" class="settings-btn" aria-label="Configurações">⚙️</button>
     </header>
 
     <main>
         <section class="timer-container">
-            <div class="progress-circle">
-                <svg class="progress-ring" width="200" height="200">
-                    <circle class="progress-ring-bg" cx="100" cy="100" r="80"></circle>
-                    <circle class="progress-ring-circle" cx="100" cy="100" r="80" id="progress-ring-circle"></circle>
-                </svg>
-                <div class="timer-display">
-                    <span id="minutes">25</span>:<span id="seconds">00</span>
-                </div>
+            <div class="timer-modes-nav">
+                <button class="mode-btn active" data-mode="pomodoro">Pomodoro</button>
+                <button class="mode-btn" data-mode="short-break">Short Break</button>
+                <button class="mode-btn" data-mode="long-break">Long Break</button>
+            </div>
+            <div class="timer-display">
+                <span id="minutes">25</span>:<span id="seconds">00</span>
             </div>
             <div class="timer-mode">
                 <span id="current-mode">Trabalho</span>
@@ -62,29 +62,85 @@
             </div>
         </section>
 
-        <section class="settings-container">
-            <h2>Configurações</h2>
-            <form id="settings-form">
-                <div class="form-group">
-                    <label for="work-duration">Duração do trabalho (minutos):</label>
-                    <input type="number" id="work-duration" min="1" max="60" value="25">
-                </div>
-                <div class="form-group">
-                    <label for="short-break-duration">Pausa curta (minutos):</label>
-                    <input type="number" id="short-break-duration" min="1" max="30" value="5">
-                </div>
-                <div class="form-group">
-                    <label for="long-break-duration">Pausa longa (minutos):</label>
-                    <input type="number" id="long-break-duration" min="1" max="60" value="15">
-                </div>
-                <div class="form-group">
-                    <label for="sound-enabled">Notificações sonoras:</label>
-                    <input type="checkbox" id="sound-enabled" checked>
-                </div>
-                <button type="submit" class="btn">Salvar</button>
+        <section class="tasks-container">
+            <h2>Tarefas</h2>
+            <form id="task-form">
+                <input type="text" id="task-input" placeholder="Adicione uma nova tarefa" required>
+                <button type="submit" class="btn">Adicionar</button>
             </form>
+            <ul id="task-list">
+                <!-- Tasks will be added here dynamically -->
+            </ul>
         </section>
     </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Configurações</h2>
+                <button id="close-settings" class="close-btn">&times;</button>
+            </div>
+            <form id="settings-form">
+                <div class="settings-section">
+                    <h3>Preferências do usuário</h3>
+                    <div class="form-group">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="show-time-in-title">
+                            <label for="show-time-in-title">Indicação do tempo no título?</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="sound-enabled" checked>
+                            <label for="sound-enabled">Notificações sonoras?</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Configurações de som</h3>
+                    <div class="form-group">
+                        <label for="sound-type">Selecione o som:</label>
+                        <select id="sound-type" class="form-control">
+                            <option value="beep">Beep</option>
+                            <option value="bell">Sino</option>
+                            <option value="alarm">Alarme</option>
+                            <option value="notification">Notificação</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sound-volume">Selecione o volume:</label>
+                        <select id="sound-volume" class="form-control">
+                            <option value="0.0">Mudo</option>
+                            <option value="0.25">25%</option>
+                            <option value="0.5">50%</option>
+                            <option value="0.75">75%</option>
+                            <option value="1.0">100%</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Configurar tempos (em minutos)</h3>
+                    <div class="form-group">
+                        <label for="work-duration">Pomodoro:</label>
+                        <input type="number" id="work-duration" min="1" max="60" value="25">
+                    </div>
+                    <div class="form-group">
+                        <label for="short-break-duration">Pausa curta:</label>
+                        <input type="number" id="short-break-duration" min="1" max="30" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="long-break-duration">Pausa longa:</label>
+                        <input type="number" id="long-break-duration" min="1" max="60" value="15">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Salvar</button>
+            </form>
+        </div>
+    </div>
 
     <footer>
         <p>&copy; 2025 Pomodoro Timer | <a href="https://github.com/matheusdmlopes/pomodoro-timer-web"
@@ -94,6 +150,7 @@
     <!-- JavaScript -->
     <script src="js/settings.js"></script>
     <script src="js/timer.js"></script>
+    <script src="js/tasks.js"></script>
     <script src="js/main.js"></script>
 </body>
 
