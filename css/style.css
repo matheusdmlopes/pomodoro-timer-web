@@ -42,6 +42,9 @@ header h1 {
     font-size: 2rem;
     margin: 0;
     padding: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 h1 {
@@ -319,6 +322,20 @@ footer a {
     .settings-container {
         padding: 1rem;
     }
+
+    .settings-text {
+        display: none;
+        /* Hide text on very small screens */
+    }
+
+    header h1 {
+        font-size: 1.6rem;
+        /* Slightly smaller title on mobile */
+    }
+
+    .settings-btn {
+        padding: 0.5rem;
+    }
 }
 
 .tasks-container {
@@ -406,15 +423,36 @@ footer a {
 /* Header Styles */
 /* Header styling is already defined in the Base Styles section above */
 
+.settings-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+}
+
+.settings-text {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
 .settings-btn {
     background: none;
     border: none;
-    font-size: 1.5rem;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
     transition: background-color 0.3s;
     color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.settings-icon {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .settings-btn:hover {

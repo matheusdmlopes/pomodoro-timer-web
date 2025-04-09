@@ -36,15 +36,18 @@
     <!-- End Google Tag Manager (noscript) -->
     <header>
         <h1>Pomodoro Timer</h1>
-        <button id="settings-btn" class="settings-btn" aria-label="Configurações">⚙️</button>
+        <button id="settings-btn" class="settings-btn" aria-label="Configurações">
+            <span class="settings-text">Configurações</span>
+            <span class="settings-icon">⚙️</span>
+        </button>
     </header>
 
     <main>
         <section class="timer-container">
             <div class="timer-modes-nav">
                 <button class="mode-btn active" data-mode="pomodoro">Pomodoro</button>
-                <button class="mode-btn" data-mode="short-break">Short Break</button>
-                <button class="mode-btn" data-mode="long-break">Long Break</button>
+                <button class="mode-btn" data-mode="short-break">Pausa Curta</button>
+                <button class="mode-btn" data-mode="long-break">Pausa Longa</button>
             </div>
             <div class="timer-display">
                 <span id="minutes">25</span>:<span id="seconds">00</span>
