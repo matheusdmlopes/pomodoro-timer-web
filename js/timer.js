@@ -9,11 +9,12 @@ const TIMER_MODES = {
     LONG_BREAK: 'long-break'
 };
 
-// Map modes to display names
-const MODE_DISPLAY_NAMES = {
-    [TIMER_MODES.POMODORO]: 'Pomodoro',
-    [TIMER_MODES.SHORT_BREAK]: 'Pausa Curta',
-    [TIMER_MODES.LONG_BREAK]: 'Pausa Longa'
+// Map modes to i18n keys (used by updateModeDisplay)
+// Display names are now handled by i18n.js
+const MODE_I18N_KEYS = {
+    [TIMER_MODES.POMODORO]: 'modePomodoro',
+    [TIMER_MODES.SHORT_BREAK]: 'modeShortBreak',
+    [TIMER_MODES.LONG_BREAK]: 'modeLongBreak'
 };
 
 // Timer state
@@ -72,18 +73,42 @@ const SOUND_CONFIGS = {
 function initTimer() {
     loadSettings();
     setupEventListeners();
-    resetTimer(); // This will set the initial time based on current mode
+    resetTimer(); // This will set the initial time and mode display
+    // Initial mode display update might rely on i18n loading, so we re-call it
+    // after the initial language set in i18n.js
+    document.addEventListener('languageChanged', () => updateModeDisplay());
 }
 
 // Load settings from localStorage
 function loadSettings() {
     const savedSettings = localStorage.getItem('pomodoroSettings');
     if (savedSettings) {
-        settings = JSON.parse(savedSettings);
+        // Merge saved settings with defaults to ensure all keys exist
+        settings = { ...settings, ...JSON.parse(savedSettings) };
     }
 
-    // Set initial time based on current mode
-    timeLeft = settings.workDuration * 60;
+    // Reset timer values based on loaded settings and current mode
+    resetTimerValues();
+}
+
+// Separate function to reset timer values based on current mode and settings
+function resetTimerValues() {
+    switch (currentMode) {
+        case TIMER_MODES.POMODORO:
+            timeLeft = settings.workDuration * 60;
+            break;
+        case TIMER_MODES.SHORT_BREAK:
+            timeLeft = settings.shortBreakDuration * 60;
+            break;
+        case TIMER_MODES.LONG_BREAK:
+            timeLeft = settings.longBreakDuration * 60;
+            break;
+        default:
+            // Fallback to pomodoro if mode is somehow invalid
+            currentMode = TIMER_MODES.POMODORO;
+            timeLeft = settings.workDuration * 60;
+    }
+    totalTime = timeLeft; // Update total time for progress ring (if used)
 }
 
 // Setup event listeners
@@ -100,50 +125,61 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Listen for language changes to update dynamic texts
+    document.addEventListener('languageChanged', (event) => {
+        const langData = event.detail.langData;
+        updateModeDisplay(); // Update mode display text
+        // Update page title if needed
+        if (!isRunning) {
+            updatePageTitle();
+        }
+        // Potentially update other dynamic texts if needed here
+    });
 }
 
 // Switch timer mode
 function switchMode(mode) {
+    if (!TIMER_MODES[Object.keys(TIMER_MODES).find(key => TIMER_MODES[key] === mode)]) {
+        console.warn(`Invalid mode attempted: ${mode}. Defaulting to POMODORO.`);
+        mode = TIMER_MODES.POMODORO;
+    }
+
     if (mode === currentMode) return;
 
-    // Update active button
+    currentMode = mode;
+    clearInterval(timerId);
+    isRunning = false;
+
+    // Update active button styling
     modeButtons.forEach(button => {
         button.classList.toggle('active', button.dataset.mode === mode);
     });
 
-    // Always reload the latest settings from localStorage
-    loadSettings();
+    // Reset timer values for the new mode
+    resetTimerValues();
 
-    currentMode = mode;
-
-    // Set time based on mode
-    switch (mode) {
-        case TIMER_MODES.POMODORO:
-            timeLeft = settings.workDuration * 60;
-            break;
-        case TIMER_MODES.SHORT_BREAK:
-            timeLeft = settings.shortBreakDuration * 60;
-            break;
-        case TIMER_MODES.LONG_BREAK:
-            timeLeft = settings.longBreakDuration * 60;
-            break;
-    }
-
+    // Update displays
     updateTimerDisplay();
     updateModeDisplay();
 
-    // Track event
-    trackEvent('Timer', 'Switch Mode', mode);
+    // Track event (optional)
+    // trackEvent('Timer', 'Switch Mode', mode);
 }
 
 // Start timer
 function startTimer() {
     if (isRunning) return;
+    if (timeLeft <= 0) {
+        resetTimerValues(); // Ensure time is reset if starting from 0
+        updateTimerDisplay();
+    }
 
     isRunning = true;
     timerId = setInterval(() => {
         timeLeft--;
         updateTimerDisplay();
+        updatePageTitle(); // Continuously update title while running
 
         if (timeLeft <= 0) {
             clearInterval(timerId);
@@ -153,8 +189,8 @@ function startTimer() {
         }
     }, 1000);
 
-    // Track event
-    trackEvent('Timer', 'Start', currentMode);
+    // Track event (optional)
+    // trackEvent('Timer', 'Start', currentMode);
 }
 
 // Pause timer
@@ -163,9 +199,10 @@ function pauseTimer() {
 
     clearInterval(timerId);
     isRunning = false;
+    updatePageTitle(); // Update title to base title when paused
 
-    // Track event
-    trackEvent('Timer', 'Pause', currentMode);
+    // Track event (optional)
+    // trackEvent('Timer', 'Pause', currentMode);
 }
 
 // Reset timer
@@ -173,80 +210,70 @@ function resetTimer() {
     clearInterval(timerId);
     isRunning = false;
 
-    // Reload latest settings
-    loadSettings();
+    // Reload latest settings (important if they changed)
+    loadSettings(); // This also calls resetTimerValues()
 
-    // Reset time based on current mode
-    switch (currentMode) {
-        case TIMER_MODES.POMODORO:
-            timeLeft = settings.workDuration * 60;
-            break;
-        case TIMER_MODES.SHORT_BREAK:
-            timeLeft = settings.shortBreakDuration * 60;
-            break;
-        case TIMER_MODES.LONG_BREAK:
-            timeLeft = settings.longBreakDuration * 60;
-            break;
-    }
-
+    // Update displays
     updateTimerDisplay();
+    updateModeDisplay(); // Ensure mode display is correct
+    updatePageTitle();   // Reset title
 
-    // Track event
-    trackEvent('Timer', 'Reset', currentMode);
+    // Track event (optional)
+    // trackEvent('Timer', 'Reset', currentMode);
 }
 
 // Handle timer completion
 function handleTimerComplete() {
     if (currentMode === TIMER_MODES.POMODORO) {
-        // Increment session count after work session
         completedSessions++;
-        sessionCountElement.textContent = completedSessions;
+        sessionCountElement.textContent = completedSessions; // Session count isn't translated
 
-        // Track session completion
-        if (typeof trackEvent === 'function') {
-            trackEvent('Session', 'Complete', `Session #${completedSessions}`);
-        }
+        // Track session completion (optional)
+        // if (typeof trackEvent === 'function') {
+        //     trackEvent('Session', 'Complete', `Session #${completedSessions}`);
+        // }
 
-        // After 4 work sessions, take a long break
         if (completedSessions % 4 === 0) {
             switchMode(TIMER_MODES.LONG_BREAK);
         } else {
             switchMode(TIMER_MODES.SHORT_BREAK);
         }
     } else {
-        // After any break, go back to work mode
         switchMode(TIMER_MODES.POMODORO);
     }
 
-    // Update mode display
-    updateModeDisplay();
-
-    // Reset timer for the new mode
-    resetTimer();
-
-    // Auto-start the next session
-    startTimer();
+    // No need to call resetTimer here, switchMode handles it
+    // Auto-start the next session if desired (could be a setting)
+    // startTimer();
 }
 
-// Update timer display
+// Update timer display (numbers)
 function updateTimerDisplay() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
 
     minutesElement.textContent = minutes.toString().padStart(2, '0');
     secondsElement.textContent = seconds.toString().padStart(2, '0');
-
-    // Update page title only if enabled in settings
-    if (settings.showTimeInTitle) {
-        document.title = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - Pomodoro Timer`;
-    } else {
-        document.title = 'Pomodoro Timer';
-    }
+    // Title update is handled separately in updatePageTitle
 }
 
-// Update mode display
+// Update mode display (text)
 function updateModeDisplay() {
-    currentModeElement.textContent = MODE_DISPLAY_NAMES[currentMode];
+    const modeKey = MODE_I18N_KEYS[currentMode];
+    // Use the getTranslation function from i18n.js
+    currentModeElement.textContent = typeof getTranslation === 'function' ? getTranslation(modeKey) : modeKey;
+}
+
+// Update page title based on state and settings
+function updatePageTitle() {
+    const baseTitle = typeof getTranslation === 'function' ? getTranslation('appTitle') : 'Pomodoro Timer';
+    if (settings.showTimeInTitle && isRunning && timeLeft >= 0) {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.title = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} - ${baseTitle}`;
+    } else {
+        document.title = baseTitle;
+    }
 }
 
 // Play notification sound
@@ -293,17 +320,21 @@ function updateProgressRing(progressFraction) {
     }
 }
 
-// Update settings
+// Update settings (called from settings.js)
 function updateSettings(newSettings) {
-    settings = newSettings;
-    updateTimerDisplay(); // Immediately update the display to reflect new settings
+    settings = { ...settings, ...newSettings };
+    // If the timer is not running, update the display immediately
+    if (!isRunning) {
+        resetTimerValues();
+        updateTimerDisplay();
+        updatePageTitle(); // Update title in case showTimeInTitle changed
+    }
 }
 
-// Initialize timer when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    initTimer();
-    // Export timer functionality globally
-    window.timer = {
-        updateSettings
-    };
-}); 
+// Initialize the timer when the script loads
+initTimer();
+
+// Export timer functionality globally
+window.timer = {
+    updateSettings
+}; 

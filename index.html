@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Pomodoro Timer - Uma ferramenta para aumentar sua produtividade com o método Pomodoro">
-    <meta name="keywords" content="pomodoro, timer, produtividade, foco, técnica pomodoro">
-    <meta name="author" content="Seu Nome">
+    <meta name="description" content="" data-i18n="metaDescription">
+    <meta name="keywords" content="" data-i18n="metaKeywords">
+    <meta name="author" content="Matheus De Marco Lopes">
     <meta name="theme-color" content="#e74c3c">
-    <title>Pomodoro Timer</title>
+    <title data-i18n="appTitle">Pomodoro Timer</title>
     <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
@@ -35,9 +34,14 @@
             style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <header>
-        <h1>Pomodoro Timer</h1>
-        <button id="settings-btn" class="settings-btn" aria-label="Configurações">
-            <span class="settings-text">Configurações</span>
+        <div class="language-switcher">
+            <button class="lang-btn" data-lang="pt">PT</button>
+            <button class="lang-btn" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="es">ES</button>
+        </div>
+        <h1 data-i18n="headerTitle">Pomodoro Timer</h1>
+        <button id="settings-btn" class="settings-btn" aria-label="" data-i18n-label="settingsBtnLabel">
+            <span class="settings-text" data-i18n="settingsBtnText">Configurações</span>
             <span class="settings-icon">⚙️</span>
         </button>
     </header>
@@ -45,31 +49,31 @@
     <main>
         <section class="timer-container">
             <div class="timer-modes-nav">
-                <button class="mode-btn active" data-mode="pomodoro">Pomodoro</button>
-                <button class="mode-btn" data-mode="short-break">Pausa Curta</button>
-                <button class="mode-btn" data-mode="long-break">Pausa Longa</button>
+                <button class="mode-btn active" data-mode="pomodoro" data-i18n="modePomodoro">Pomodoro</button>
+                <button class="mode-btn" data-mode="short-break" data-i18n="modeShortBreak">Pausa Curta</button>
+                <button class="mode-btn" data-mode="long-break" data-i18n="modeLongBreak">Pausa Longa</button>
             </div>
             <div class="timer-display">
                 <span id="minutes">25</span>:<span id="seconds">00</span>
             </div>
             <div class="timer-mode">
-                <span id="current-mode">Trabalho</span>
+                <span id="current-mode" data-i18n="timerModeWork">Trabalho</span>
             </div>
             <div class="timer-controls">
-                <button id="start-btn" class="btn">Iniciar</button>
-                <button id="pause-btn" class="btn">Pausar</button>
-                <button id="reset-btn" class="btn">Reiniciar</button>
+                <button id="start-btn" class="btn" data-i18n="startBtn">Iniciar</button>
+                <button id="pause-btn" class="btn" data-i18n="pauseBtn">Pausar</button>
+                <button id="reset-btn" class="btn" data-i18n="resetBtn">Reiniciar</button>
             </div>
             <div class="session-counter">
-                <span>Sessões concluídas: <span id="session-count">0</span></span>
+                <span data-i18n="sessionCounter">Sessões concluídas:</span> <span id="session-count">0</span>
             </div>
         </section>
 
         <section class="tasks-container">
-            <h2>Tarefas</h2>
+            <h2 data-i18n="tasksTitle">Tarefas</h2>
             <form id="task-form">
-                <input type="text" id="task-input" placeholder="Adicione uma nova tarefa" required>
-                <button type="submit" class="btn">Adicionar</button>
+                <input type="text" id="task-input" placeholder="" data-i18n-placeholder="taskInputPlaceholder" required>
+                <button type="submit" class="btn" data-i18n="addTaskBtn">Adicionar</button>
             </form>
             <ul id="task-list">
                 <!-- Tasks will be added here dynamically -->
@@ -81,76 +85,78 @@
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Configurações</h2>
+                <h2 data-i18n="modalSettingsTitle">Configurações</h2>
                 <button id="close-settings" class="close-btn">&times;</button>
             </div>
             <form id="settings-form">
                 <div class="settings-section">
-                    <h3>Preferências do usuário</h3>
+                    <h3 data-i18n="modalUserPrefsTitle">Preferências do usuário</h3>
                     <div class="form-group">
                         <div class="checkbox-container">
                             <input type="checkbox" id="show-time-in-title">
-                            <label for="show-time-in-title">Indicação do tempo no título?</label>
+                            <label for="show-time-in-title" data-i18n="prefShowTimeInTitle">Indicação do tempo no
+                                título?</label>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="checkbox-container">
                             <input type="checkbox" id="sound-enabled" checked>
-                            <label for="sound-enabled">Notificações sonoras?</label>
+                            <label for="sound-enabled" data-i18n="prefSoundNotifications">Notificações sonoras?</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="settings-section">
-                    <h3>Configurações de som</h3>
+                    <h3 data-i18n="modalSoundSettingsTitle">Configurações de som</h3>
                     <div class="form-group">
-                        <label for="sound-type">Selecione o som:</label>
+                        <label for="sound-type" data-i18n="soundTypeLabel">Selecione o som:</label>
                         <select id="sound-type" class="form-control">
-                            <option value="beep">Beep</option>
-                            <option value="bell">Sino</option>
-                            <option value="alarm">Alarme</option>
-                            <option value="notification">Notificação</option>
+                            <option value="beep" data-i18n="soundTypeBeep">Beep</option>
+                            <option value="bell" data-i18n="soundTypeBell">Sino</option>
+                            <option value="alarm" data-i18n="soundTypeAlarm">Alarme</option>
+                            <option value="notification" data-i18n="soundTypeNotification">Notificação</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="sound-volume">Selecione o volume:</label>
+                        <label for="sound-volume" data-i18n="soundVolumeLabel">Selecione o volume:</label>
                         <select id="sound-volume" class="form-control">
-                            <option value="0.0">Mudo</option>
-                            <option value="0.25">25%</option>
-                            <option value="0.5">50%</option>
-                            <option value="0.75">75%</option>
-                            <option value="1.0">100%</option>
+                            <option value="0.0" data-i18n="volumeMute">Mudo</option>
+                            <option value="0.25" data-i18n="volume25">25%</option>
+                            <option value="0.5" data-i18n="volume50">50%</option>
+                            <option value="0.75" data-i18n="volume75">75%</option>
+                            <option value="1.0" data-i18n="volume100">100%</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="settings-section">
-                    <h3>Configurar tempos (em minutos)</h3>
+                    <h3 data-i18n="modalTimeSettingsTitle">Configurar tempos (em minutos)</h3>
                     <div class="form-group">
-                        <label for="work-duration">Pomodoro:</label>
+                        <label for="work-duration" data-i18n="timePomodoroLabel">Pomodoro:</label>
                         <input type="number" id="work-duration" min="1" max="60" value="25">
                     </div>
                     <div class="form-group">
-                        <label for="short-break-duration">Pausa curta:</label>
+                        <label for="short-break-duration" data-i18n="timeShortBreakLabel">Pausa curta:</label>
                         <input type="number" id="short-break-duration" min="1" max="30" value="5">
                     </div>
                     <div class="form-group">
-                        <label for="long-break-duration">Pausa longa:</label>
+                        <label for="long-break-duration" data-i18n="timeLongBreakLabel">Pausa longa:</label>
                         <input type="number" id="long-break-duration" min="1" max="60" value="15">
                     </div>
                 </div>
 
-                <button type="submit" class="btn">Salvar</button>
+                <button type="submit" class="btn" data-i18n="saveBtn">Salvar</button>
             </form>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2025 Pomodoro Timer | <a href="https://github.com/matheusdmlopes/pomodoro-timer-web"
-                target="_blank">GitHub</a></p>
+        <p>&copy; 2025 Pomodoro Timer | <a href="https://github.com/matheusdmlopes/pomodoro-timer-web" target="_blank"
+                data-i18n="footerGitHubLink">GitHub</a></p>
     </footer>
 
     <!-- JavaScript -->
+    <script src="js/i18n.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/timer.js"></script>
     <script src="js/tasks.js"></script>
