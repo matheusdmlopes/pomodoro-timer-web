@@ -21,6 +21,7 @@
     "modalUserPrefsTitle": "Preferencias del usuario",
     "prefShowTimeInTitle": "¿Mostrar tiempo en el título?",
     "prefSoundNotifications": "¿Notificaciones sonoras?",
+    "prefAutoStart": "¿Iniciar automáticamente pomodoros y pausas?",
     "modalSoundSettingsTitle": "Configuración de sonido",
     "soundTypeLabel": "Seleccionar sonido:",
     "soundTypeBeep": "Beep",

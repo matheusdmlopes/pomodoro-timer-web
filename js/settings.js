@@ -50,6 +50,7 @@ class SettingsManager {
             longBreakDuration: 15,
             soundEnabled: true,
             showTimeInTitle: true,
+            autoStartEnabled: false,
             soundType: 'beep',
             soundVolume: 0.75
         };
@@ -59,6 +60,7 @@ class SettingsManager {
         document.getElementById('long-break-duration').value = settings.longBreakDuration;
         document.getElementById('sound-enabled').checked = settings.soundEnabled;
         document.getElementById('show-time-in-title').checked = settings.showTimeInTitle;
+        document.getElementById('auto-start-enabled').checked = settings.autoStartEnabled !== undefined ? settings.autoStartEnabled : false;
         document.getElementById('sound-type').value = settings.soundType;
         document.getElementById('sound-volume').value = settings.soundVolume;
 
@@ -72,6 +74,7 @@ class SettingsManager {
             longBreakDuration: parseInt(document.getElementById('long-break-duration').value),
             soundEnabled: document.getElementById('sound-enabled').checked,
             showTimeInTitle: document.getElementById('show-time-in-title').checked,
+            autoStartEnabled: document.getElementById('auto-start-enabled').checked,
             soundType: document.getElementById('sound-type').value,
             soundVolume: parseFloat(document.getElementById('sound-volume').value)
         };

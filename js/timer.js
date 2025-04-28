@@ -30,6 +30,7 @@ let settings = {
     longBreakDuration: 15,
     soundEnabled: true,
     showTimeInTitle: true,
+    autoStartEnabled: false,
     soundType: 'beep',
     soundVolume: 0.5
 };
@@ -242,9 +243,10 @@ function handleTimerComplete() {
         switchMode(TIMER_MODES.POMODORO);
     }
 
-    // No need to call resetTimer here, switchMode handles it
-    // Auto-start the next session if desired (could be a setting)
-    // startTimer();
+    // Auto-start the next session if enabled in settings
+    if (settings.autoStartEnabled) {
+        startTimer();
+    }
 }
 
 // Update timer display (numbers)
@@ -322,6 +324,7 @@ function updateProgressRing(progressFraction) {
 
 // Update settings (called from settings.js)
 function updateSettings(newSettings) {
+    // Ensure we preserve autoStartEnabled when updating from settings
     settings = { ...settings, ...newSettings };
     // If the timer is not running, update the display immediately
     if (!isRunning) {
