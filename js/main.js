@@ -57,15 +57,15 @@ function loadTimerState() {
 
 // Initialize app
 function initApp() {
-    // Initialize Service Worker for future PWA support
+    // Register Service Worker
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./service-worker.js')
-                .then(function (registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful');
                 })
-                .catch(function (error) {
-                    console.log('ServiceWorker registration failed: ', error);
+                .catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
                 });
         });
     }
