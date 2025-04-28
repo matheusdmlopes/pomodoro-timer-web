@@ -23,7 +23,7 @@ body {
 
 header {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: minmax(auto, 1fr) auto minmax(auto, 1fr);
     align-items: center;
     padding: 1rem 1.5rem;
     background: linear-gradient(to bottom, #5a5a5a, #404040);
@@ -32,12 +32,14 @@ header {
     min-height: 4rem;
     color: white;
     gap: 1rem;
+    position: relative;
 }
 
 .language-switcher {
     grid-column: 1 / 2;
     display: flex;
     gap: 0.5rem;
+    justify-self: start;
 }
 
 .lang-btn {
@@ -72,6 +74,8 @@ header h1 {
     margin: 0;
     padding: 0;
     text-align: center;
+    justify-self: center;
+    white-space: nowrap;
 }
 
 h1 {
@@ -617,7 +621,7 @@ select.form-control:hover {
 
 @media (max-width: 600px) {
     header {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: auto 1fr auto;
         padding: 0.8rem 1rem;
         gap: 0.8rem;
     }
@@ -633,10 +637,11 @@ select.form-control:hover {
         font-size: 1.5rem;
         text-align: center;
         margin-top: 0.5rem;
+        justify-self: center;
     }
 
     .settings-btn {
-        grid-column: 2 / 3;
+        grid-column: 3 / 4;
         grid-row: 1 / 2;
         justify-self: end;
     }
