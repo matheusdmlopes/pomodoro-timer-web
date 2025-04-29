@@ -9,9 +9,13 @@ class SettingsManager {
         this.settingsModal = document.getElementById('settings-modal');
         this.settingsBtn = document.getElementById('settings-btn');
         this.closeBtn = document.getElementById('close-settings');
+        this.themeToggleBtn = document.getElementById('theme-toggle');
+        this.themeIcon = document.getElementById('theme-icon');
 
         this.initializeEventListeners();
+        this.detectSystemTheme();
         this.loadSettings();
+        this.applyTheme();
     }
 
     initializeEventListeners() {
@@ -41,6 +45,65 @@ class SettingsManager {
             // Track event
             trackEvent('Settings', 'Save', 'Settings updated');
         });
+
+        // Theme toggle
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.addEventListener('click', () => {
+                const settings = this.loadSettings();
+                const newTheme = settings.theme === 'dark' ? 'light' : 'dark';
+                settings.theme = newTheme;
+                localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
+                this.applyTheme(newTheme);
+
+                // Track event
+                trackEvent('Settings', 'ThemeChange', `Theme changed to ${newTheme}`);
+            });
+        }
+
+        // Listen for system theme changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                const savedSettings = JSON.parse(localStorage.getItem('pomodoroSettings')) || {};
+                // Only apply system theme if not explicitly set by user
+                if (!savedSettings.hasOwnProperty('theme')) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    this.applyTheme(newTheme);
+                    savedSettings.theme = newTheme;
+                    localStorage.setItem('pomodoroSettings', JSON.stringify(savedSettings));
+                }
+            });
+        }
+    }
+
+    detectSystemTheme() {
+        if (window.matchMedia && !localStorage.getItem('pomodoroSettings')) {
+            const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const defaultSettings = {
+                workDuration: 25,
+                shortBreakDuration: 5,
+                longBreakDuration: 15,
+                soundEnabled: true,
+                showTimeInTitle: true,
+                autoStartEnabled: false,
+                soundType: 'beep',
+                soundVolume: 0.75,
+                theme: prefersDarkMode ? 'dark' : 'light'
+            };
+            localStorage.setItem('pomodoroSettings', JSON.stringify(defaultSettings));
+        }
+    }
+
+    applyTheme(theme) {
+        const settings = this.loadSettings();
+        theme = theme || settings.theme || 'light';
+
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (this.themeIcon) this.themeIcon.textContent = '☀️';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            if (this.themeIcon) this.themeIcon.textContent = '🌙';
+        }
     }
 
     loadSettings() {
@@ -52,7 +115,8 @@ class SettingsManager {
             showTimeInTitle: true,
             autoStartEnabled: false,
             soundType: 'beep',
-            soundVolume: 0.75
+            soundVolume: 0.75,
+            theme: 'light'
         };
 
         document.getElementById('work-duration').value = settings.workDuration;
@@ -63,6 +127,7 @@ class SettingsManager {
         document.getElementById('auto-start-enabled').checked = settings.autoStartEnabled !== undefined ? settings.autoStartEnabled : false;
         document.getElementById('sound-type').value = settings.soundType;
         document.getElementById('sound-volume').value = settings.soundVolume;
+        document.getElementById('theme-select').value = settings.theme || 'light';
 
         return settings;
     }
@@ -76,10 +141,12 @@ class SettingsManager {
             showTimeInTitle: document.getElementById('show-time-in-title').checked,
             autoStartEnabled: document.getElementById('auto-start-enabled').checked,
             soundType: document.getElementById('sound-type').value,
-            soundVolume: parseFloat(document.getElementById('sound-volume').value)
+            soundVolume: parseFloat(document.getElementById('sound-volume').value),
+            theme: document.getElementById('theme-select').value
         };
 
         localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
+        this.applyTheme(settings.theme);
 
         // Update timer settings and display
         if (window.timer) {
