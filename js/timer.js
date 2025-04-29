@@ -24,6 +24,8 @@ let timerId = null;
 let currentMode = TIMER_MODES.POMODORO;
 let completedSessions = 0;
 let audioContext = null;
+let startTimestamp = null; // Timestamp when the timer started
+let pausedTimeLeft = 0;    // Time left when paused
 let settings = {
     workDuration: 25,
     shortBreakDuration: 5,
@@ -137,6 +139,17 @@ function setupEventListeners() {
         }
         // Potentially update other dynamic texts if needed here
     });
+
+    // Listen for visibility change to update the timer when tab becomes visible again
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+// Handle visibility change
+function handleVisibilityChange() {
+    if (document.visibilityState === 'visible' && isRunning) {
+        // Update the timer immediately when the tab becomes visible
+        updateTimer();
+    }
 }
 
 // Switch timer mode
@@ -151,6 +164,8 @@ function switchMode(mode) {
     currentMode = mode;
     clearInterval(timerId);
     isRunning = false;
+    startTimestamp = null;
+    pausedTimeLeft = 0;
 
     // Update active button styling
     modeButtons.forEach(button => {
@@ -168,6 +183,33 @@ function switchMode(mode) {
     // trackEvent('Timer', 'Switch Mode', mode);
 }
 
+// Update timer based on timestamps
+function updateTimer() {
+    if (!isRunning || !startTimestamp) return;
+
+    const currentTime = Date.now();
+    const elapsedSeconds = Math.floor((currentTime - startTimestamp) / 1000);
+
+    // Calculate the new time left
+    const newTimeLeft = Math.max(0, pausedTimeLeft - elapsedSeconds);
+
+    // Only update if the time has changed
+    if (newTimeLeft !== timeLeft) {
+        timeLeft = newTimeLeft;
+        updateTimerDisplay();
+        updatePageTitle();
+
+        if (timeLeft <= 0) {
+            clearInterval(timerId);
+            isRunning = false;
+            startTimestamp = null;
+            pausedTimeLeft = 0;
+            playNotificationSound();
+            handleTimerComplete();
+        }
+    }
+}
+
 // Start timer
 function startTimer() {
     if (isRunning) return;
@@ -177,18 +219,16 @@ function startTimer() {
     }
 
     isRunning = true;
-    timerId = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay();
-        updatePageTitle(); // Continuously update title while running
 
-        if (timeLeft <= 0) {
-            clearInterval(timerId);
-            isRunning = false;
-            playNotificationSound();
-            handleTimerComplete();
-        }
-    }, 1000);
+    // Store the current timestamp and time left
+    startTimestamp = Date.now();
+    pausedTimeLeft = timeLeft;
+
+    // Start interval that updates based on actual time elapsed
+    timerId = setInterval(updateTimer, 1000);
+
+    // Initial update
+    updateTimer();
 
     // Track event (optional)
     // trackEvent('Timer', 'Start', currentMode);
@@ -200,6 +240,11 @@ function pauseTimer() {
 
     clearInterval(timerId);
     isRunning = false;
+
+    // Store the remaining time when paused
+    pausedTimeLeft = timeLeft;
+    startTimestamp = null;
+
     updatePageTitle(); // Update title to base title when paused
 
     // Track event (optional)
@@ -210,6 +255,8 @@ function pauseTimer() {
 function resetTimer() {
     clearInterval(timerId);
     isRunning = false;
+    startTimestamp = null;
+    pausedTimeLeft = 0;
 
     // Reload latest settings (important if they changed)
     loadSettings(); // This also calls resetTimerValues()
