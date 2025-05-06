@@ -11,6 +11,7 @@ class SettingsManager {
         this.closeBtn = document.getElementById('close-settings');
         this.themeToggleBtn = document.getElementById('theme-toggle');
         this.themeIcon = document.getElementById('theme-icon');
+        this.mouseDownTarget = null;
 
         this.initializeEventListeners();
         this.detectSystemTheme();
@@ -29,11 +30,21 @@ class SettingsManager {
             this.settingsModal.classList.remove('show');
         });
 
-        // Close modal when clicking outside
-        this.settingsModal.addEventListener('click', (e) => {
-            if (e.target === this.settingsModal) {
+        // Track where the mouse down event started
+        document.addEventListener('mousedown', (e) => {
+            if (this.settingsModal.classList.contains('show')) {
+                this.mouseDownTarget = e.target;
+            }
+        });
+
+        // Close modal only on complete click outside (mousedown and mouseup on the modal background)
+        document.addEventListener('mouseup', (e) => {
+            if (this.settingsModal.classList.contains('show') &&
+                e.target === this.settingsModal &&
+                this.mouseDownTarget === this.settingsModal) {
                 this.settingsModal.classList.remove('show');
             }
+            this.mouseDownTarget = null;
         });
 
         // Handle form submission
