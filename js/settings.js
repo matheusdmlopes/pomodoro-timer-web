@@ -12,6 +12,7 @@ class SettingsManager {
         this.themeToggleBtn = document.getElementById('theme-toggle');
         this.themeIcon = document.getElementById('theme-icon');
         this.mouseDownTarget = null;
+        this.testSoundBtn = document.getElementById('test-sound-btn');
 
         this.initializeEventListeners();
         this.detectSystemTheme();
@@ -23,6 +24,8 @@ class SettingsManager {
         // Open settings modal
         this.settingsBtn.addEventListener('click', () => {
             this.settingsModal.classList.add('show');
+            // Reload saved settings to discard any unsaved changes from previous openings
+            this.loadSettings();
         });
 
         // Close settings modal
@@ -57,6 +60,30 @@ class SettingsManager {
             trackEvent('Settings', 'Save', 'Settings updated');
         });
 
+        // Test sound button
+        if (this.testSoundBtn) {
+            this.testSoundBtn.addEventListener('click', () => {
+                // Create temporary settings object with current form values
+                const tempSettings = {
+                    soundEnabled: true, // Force enabled for testing
+                    soundType: document.getElementById('sound-type').value,
+                    soundVolume: parseFloat(document.getElementById('sound-volume').value)
+                };
+
+                // Check if window.timer and playSound are available
+                if (window.timer && typeof window.timer.playSound === 'function') {
+                    window.timer.playSound(tempSettings);
+                } else {
+                    this.playTestSound(tempSettings);
+                }
+
+                // Track event
+                if (typeof trackEvent === 'function') {
+                    trackEvent('Settings', 'TestSound', `Sound tested: ${tempSettings.soundType}`);
+                }
+            });
+        }
+
         // Theme toggle
         if (this.themeToggleBtn) {
             this.themeToggleBtn.addEventListener('click', () => {
@@ -84,6 +111,51 @@ class SettingsManager {
                 }
             });
         }
+    }
+
+    // Fallback function to play sound if window.timer is not available
+    playTestSound(settings) {
+        // Define sound configurations
+        const SOUND_CONFIGS = {
+            beep: {
+                frequency: 800,
+                type: 'sine'
+            },
+            bell: {
+                frequency: 440,
+                type: 'triangle'
+            },
+            alarm: {
+                frequency: 600,
+                type: 'square'
+            },
+            notification: {
+                frequency: 520,
+                type: 'sine'
+            }
+        };
+
+        // Create audio context
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        const soundConfig = SOUND_CONFIGS[settings.soundType] || SOUND_CONFIGS.beep;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = soundConfig.type;
+        oscillator.frequency.setValueAtTime(soundConfig.frequency, audioContext.currentTime);
+
+        // Apply volume setting
+        const volume = settings.soundVolume;
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.1);
+        gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 1);
     }
 
     detectSystemTheme() {

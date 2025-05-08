@@ -326,15 +326,19 @@ function updatePageTitle() {
 }
 
 // Play notification sound
-function playNotificationSound() {
-    if (!settings.soundEnabled) return;
+function playNotificationSound(tempSettings) {
+    // Use temporary settings if provided, otherwise use current settings
+    const currentSettings = tempSettings || settings;
+
+    if (!currentSettings.soundEnabled) return;
 
     // Create audio context on first use (to comply with autoplay policies)
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    const soundConfig = SOUND_CONFIGS[settings.soundType];
+    const soundConfig = SOUND_CONFIGS[currentSettings.soundType] || SOUND_CONFIGS.beep;
+
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -345,7 +349,7 @@ function playNotificationSound() {
     oscillator.frequency.setValueAtTime(soundConfig.frequency, audioContext.currentTime);
 
     // Apply volume setting
-    const volume = settings.soundVolume;
+    const volume = currentSettings.soundVolume;
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.1);
     gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
@@ -384,7 +388,14 @@ function updateSettings(newSettings) {
 // Initialize the timer when the script loads
 initTimer();
 
-// Export timer functionality globally
+// Expose timer functions and properties to global scope
 window.timer = {
-    updateSettings
+    start: startTimer,
+    pause: pauseTimer,
+    reset: resetTimer,
+    switchMode: switchMode,
+    updateSettings: updateSettings,
+    playSound: function (tempSettings) {
+        playNotificationSound(tempSettings);
+    } // Expose sound function for test button
 }; 

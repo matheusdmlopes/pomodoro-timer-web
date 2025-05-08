@@ -2,10 +2,11 @@
 :root {
     /* Light Theme (default) */
     --primary-color: #e74c3c;
-    --primary-dark: #c0392b;
-    --secondary-color: #2ecc71;
+    --primary-color-dark: #c0392b;
+    --secondary-color: #7f8c8d;
+    --secondary-color-dark: #6c7a7a;
     --bg-color: #f4f4f4;
-    --text-color: #333;
+    --text-color: #333333;
     --container-bg: #ffffff;
     --header-bg: linear-gradient(to bottom, #5a5a5a, #404040);
     --header-text: white;
@@ -14,20 +15,26 @@
     --gray-color: #888;
     --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     --separator: #eee;
+    --border-color: #e0e0e0;
+    --highlight-color: #f3f3f3;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
 
     /* Common */
-    --transition: all 0.3s ease;
-    --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     --container-width: 600px;
 }
 
 [data-theme="dark"] {
-    --primary-color: #ff6b6b;
-    --primary-dark: #ff5252;
-    --secondary-color: #4ecca3;
+    --primary-color: #e74c3c;
+    --primary-color-dark: #c0392b;
+    --secondary-color: #95a5a6;
+    --secondary-color-dark: #7f8c8d;
     --bg-color: #222831;
-    --text-color: #eeeeee;
-    --container-bg: #393e46;
+    --text-color: #ecf0f1;
+    --container-bg: #2c3e50;
     --header-bg: linear-gradient(to bottom, #1a1a1a, #121212);
     --header-text: #eeeeee;
     --form-bg: #2a2e35;
@@ -35,6 +42,10 @@
     --gray-color: #aaa;
     --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     --separator: #444;
+    --border-color: #34495e;
+    --highlight-color: #34495e;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
 }
 
 /* Base Styles */
@@ -210,15 +221,29 @@ footer a {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 5px;
-    font-weight: 600;
-    transition: var(--transition);
+    padding: 0.8rem 1.6rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .btn:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-3px);
+    background-color: var(--primary-color-dark);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color, #7f8c8d);
+    color: white;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary-color-dark, #6c7a7a);
 }
 
 .session-counter {

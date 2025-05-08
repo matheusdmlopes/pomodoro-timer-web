@@ -56,15 +56,8 @@ Para implantar este projeto no GitHub Pages, siga as instruções abaixo:
    - Em **Source**, selecione **Deploy from a branch**
    - Em **Branch**, selecione **main** e **/ (root)**
    - Clique em **Save**
-3. Alternativamente, você pode usar o script de implantação incluído:
-   ```bash
-   # Torne o script executável
-   chmod +x deploy.sh
-   
-   # Execute o script
-   ./deploy.sh
-   ```
-4. Seu site estará disponível em `https://seunome.github.io/pomodoro-timer-web/`
+
+3. Seu site estará disponível em `https://seunome.github.io/pomodoro-timer-web/`
 
 ## Estrutura do Projeto
 
@@ -85,15 +78,6 @@ pomodoro-timer-web/
 ├── sitemap.xml         # Sitemap para SEO
 └── README.md           # Documentação do projeto
 ```
-
-## Próximos Passos
-
-- Implementação de funcionalidade de acompanhamento de tarefas
-- Estatísticas e análises de uso
-- Suporte para PWA (Progressive Web App) para uso offline
-- Alternância entre temas claro/escuro
-- Opções avançadas de som
-- Atalhos de teclado
 
 ## Contribuições
 
