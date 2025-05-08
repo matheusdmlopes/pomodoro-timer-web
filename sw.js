@@ -8,6 +8,7 @@ const urlsToCache = [
     '/js/timer.js',
     '/js/tasks.js',
     '/js/settings.js',
+    '/js/notifications.js',
     '/js/i18n.js',
     '/manifest.json',
     '/assets/favicon.ico',
@@ -71,4 +72,32 @@ self.addEventListener('activate', event => {
             );
         })
     );
+});
+
+// Adicionar suporte a notificações
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+
+    // Se a notificação tiver uma ação específica
+    if (event.action === 'start-next') {
+        // Foca na janela existente ou abre uma nova
+        event.waitUntil(
+            clients.matchAll({ type: 'window' }).then(clientList => {
+                if (clientList.length > 0) {
+                    return clientList[0].focus().then(client => client.postMessage({ action: 'start-timer' }));
+                }
+                return clients.openWindow('/');
+            })
+        );
+    } else {
+        // Comportamento padrão ao clicar na notificação
+        event.waitUntil(
+            clients.matchAll({ type: 'window' }).then(clientList => {
+                if (clientList.length > 0) {
+                    return clientList[0].focus();
+                }
+                return clients.openWindow('/');
+            })
+        );
+    }
 }); 

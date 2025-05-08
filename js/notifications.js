@@ -9,12 +9,29 @@ class NotificationManager {
         this.notificationEnabled = false;
         this.initialized = false;
         this.iconUrl = 'assets/favicon.ico'; // Usando o favicon existente
+        this.serviceWorkerRegistration = null;
 
         // Inicializar se o navegador suportar notificações
         if (this.isSupported) {
             this.checkPermission();
+            this.initServiceWorker();
         } else {
             console.warn('Este navegador não suporta notificações.');
+        }
+    }
+
+    /**
+     * Inicializa o registro do Service Worker se disponível
+     */
+    async initServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            try {
+                this.serviceWorkerRegistration = await navigator.serviceWorker.ready;
+                console.log('Service Worker está pronto para notificações');
+            } catch (error) {
+                console.error('Erro ao obter registro do Service Worker:', error);
+                this.serviceWorkerRegistration = null;
+            }
         }
     }
 
@@ -43,6 +60,12 @@ class NotificationManager {
             const permission = await Notification.requestPermission();
             this.permissionGranted = permission === 'granted';
             console.log('Permissão de notificação:', permission);
+
+            // Se a permissão foi concedida, inicializar o service worker
+            if (this.permissionGranted && !this.serviceWorkerRegistration) {
+                await this.initServiceWorker();
+            }
+
             return this.permissionGranted;
         } catch (error) {
             console.error('Erro ao solicitar permissão para notificações:', error);
@@ -93,14 +116,14 @@ class NotificationManager {
      * Envia uma notificação
      * @param {string} title Título da notificação
      * @param {object} options Opções da notificação
-     * @returns {Notification|null} Objeto de notificação ou null se não for possível notificar
+     * @returns {Promise<boolean>} Promise resolvida com true se a notificação foi enviada
      */
-    sendNotification(title, options = {}) {
+    async sendNotification(title, options = {}) {
         if (!this.canNotify()) {
             if (this.notificationEnabled && !this.permissionGranted) {
                 this.requestPermission();
             }
-            return null;
+            return false;
         }
 
         // Configurações padrão
@@ -116,28 +139,42 @@ class NotificationManager {
 
         try {
             console.log('Enviando notificação:', title, notificationOptions);
-            const notification = new Notification(title, notificationOptions);
 
-            // Manipulador de evento de clique
-            notification.onclick = function () {
-                window.focus();
-                if (notificationOptions.onClick) {
-                    notificationOptions.onClick();
+            // Verificar se temos Service Worker disponível para notificações com ações
+            if (this.serviceWorkerRegistration && notificationOptions.actions) {
+                // Usar Service Worker para notificações com actions
+                await this.serviceWorkerRegistration.showNotification(title, notificationOptions);
+                return true;
+            } else {
+                // Usar API de Notification padrão para notificações simples
+                const notificationOpts = { ...notificationOptions };
+
+                // Remover propriedades não suportadas na API padrão
+                delete notificationOpts.actions;
+
+                const notification = new Notification(title, notificationOpts);
+
+                // Manipulador de evento de clique
+                notification.onclick = function () {
+                    window.focus();
+                    if (notificationOptions.onClick) {
+                        notificationOptions.onClick();
+                    }
+                    this.close();
+                };
+
+                // Fechar automaticamente após 5 segundos se não requerer interação
+                if (!notificationOptions.requireInteraction) {
+                    setTimeout(() => {
+                        notification.close();
+                    }, 5000);
                 }
-                this.close();
-            };
 
-            // Fechar automaticamente após 5 segundos se não requerer interação
-            if (!notificationOptions.requireInteraction) {
-                setTimeout(() => {
-                    notification.close();
-                }, 5000);
+                return true;
             }
-
-            return notification;
         } catch (error) {
             console.error('Erro ao enviar notificação:', error);
-            return null;
+            return false;
         }
     }
 
@@ -197,23 +234,30 @@ class NotificationManager {
 
             console.log('Enviando notificação com título:', title, 'e corpo:', body);
 
-            // Enviar notificação
-            this.sendNotification(title, {
+            // Configurar ações somente se temos Service Worker
+            const options = {
                 body: body,
                 requireInteraction: true,
-                actions: [
-                    {
-                        action: 'start-next',
-                        title: i18n.get('notificationStart')
-                    }
-                ],
                 onClick: () => {
                     // Se a notificação for clicada, iniciar o próximo ciclo
                     if (window.timer && typeof window.timer.start === 'function') {
                         window.timer.start();
                     }
                 }
-            });
+            };
+
+            // Adicionar ações apenas se o Service Worker estiver disponível
+            if (this.serviceWorkerRegistration) {
+                options.actions = [
+                    {
+                        action: 'start-next',
+                        title: i18n.get('notificationStart')
+                    }
+                ];
+            }
+
+            // Enviar notificação
+            this.sendNotification(title, options);
         } catch (error) {
             console.error('Erro ao processar notificação:', error);
 
@@ -275,6 +319,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Desabilitar notificações
                 notificationManager.setEnabled(false);
+            }
+        });
+    }
+
+    // Configurar listener para mensagens do Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', event => {
+            if (event.data && event.data.action === 'start-timer') {
+                if (window.timer && typeof window.timer.start === 'function') {
+                    window.timer.start();
+                }
             }
         });
     }
