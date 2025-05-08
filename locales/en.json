@@ -38,6 +38,7 @@
     "volume50": "50%",
     "volume75": "75%",
     "volume100": "100%",
+    "testSoundBtn": "Test sound",
     "modalTimeSettingsTitle": "Configure Times (in minutes)",
     "timePomodoroLabel": "Pomodoro:",
     "timeShortBreakLabel": "Short break:",

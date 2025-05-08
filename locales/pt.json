@@ -38,6 +38,7 @@
     "volume50": "50%",
     "volume75": "75%",
     "volume100": "100%",
+    "testSoundBtn": "Testar som",
     "modalTimeSettingsTitle": "Configurar tempos (em minutos)",
     "timePomodoroLabel": "Pomodoro:",
     "timeShortBreakLabel": "Pausa curta:",
