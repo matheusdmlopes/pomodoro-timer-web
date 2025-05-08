@@ -329,15 +329,8 @@ function handleTimerComplete() {
         window.notificationManager.notifyTimerComplete(currentMode, completedSessions);
     }
 
-    // Auto-start next session if enabled
-    if (settings.autoStartEnabled) {
-        // Switch mode and start
-        switchToNextMode();
-        startTimer();
-    } else {
-        // Just switch mode but don't start
-        switchToNextMode();
-    }
+    // Switch to next mode - auto-start is handled inside switchToNextMode
+    switchToNextMode();
 
     // Track event
     trackEvent('Timer', 'Complete', `${currentMode} completed`);
