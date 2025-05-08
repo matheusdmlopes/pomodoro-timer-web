@@ -17,6 +17,51 @@ const MODE_I18N_KEYS = {
     [TIMER_MODES.LONG_BREAK]: 'modeLongBreak'
 };
 
+// Sound manager to handle audio files
+class SoundManager {
+    constructor() {
+        this.sounds = {};
+        this.loadSounds();
+    }
+
+    loadSounds() {
+        // Mapping of sound types to file paths
+        const soundFiles = {
+            'bell': 'assets/sounds/bell.mp3',
+            'alarm': 'assets/sounds/alarm.mp3',
+            'alarm_loud': 'assets/sounds/alarm_loud.mp3',
+            // Fallback sound using bell for backward compatibility
+            'beep': 'assets/sounds/bell.mp3',
+            'notification': 'assets/sounds/bell.mp3'
+        };
+
+        // Pre-load sounds
+        for (const [name, path] of Object.entries(soundFiles)) {
+            this.sounds[name] = new Audio(path);
+            // Preload the audio file
+            this.sounds[name].load();
+        }
+    }
+
+    play(soundType, volume = 0.75) {
+        // Default to bell if sound type not found
+        const sound = this.sounds[soundType] || this.sounds['bell'];
+        if (!sound) return;
+
+        // Set volume and reset playback position
+        sound.volume = volume;
+        sound.currentTime = 0;
+
+        // Play the sound with error handling
+        sound.play().catch(e => {
+            console.error(`Error playing sound ${soundType}:`, e);
+        });
+    }
+}
+
+// Initialize sound manager
+const soundManager = new SoundManager();
+
 // Timer state
 let timeLeft;
 let isRunning = false;
@@ -33,7 +78,7 @@ let settings = {
     soundEnabled: true,
     showTimeInTitle: true,
     autoStartEnabled: false,
-    soundType: 'beep',
+    soundType: 'bell',
     soundVolume: 0.5
 };
 
@@ -52,7 +97,7 @@ const modeButtons = document.querySelectorAll('.mode-btn');
 let totalTime = 0;
 const progressRingCircumference = 2 * Math.PI * 80; // 2πr where r=80
 
-// Sound configurations
+// Sound configurations (kept for backward compatibility)
 const SOUND_CONFIGS = {
     beep: {
         frequency: 800,
@@ -332,30 +377,8 @@ function playNotificationSound(tempSettings) {
 
     if (!currentSettings.soundEnabled) return;
 
-    // Create audio context on first use (to comply with autoplay policies)
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    const soundConfig = SOUND_CONFIGS[currentSettings.soundType] || SOUND_CONFIGS.beep;
-
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.type = soundConfig.type;
-    oscillator.frequency.setValueAtTime(soundConfig.frequency, audioContext.currentTime);
-
-    // Apply volume setting
-    const volume = currentSettings.soundVolume;
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 1);
+    // Use the sound manager to play the sound
+    soundManager.play(currentSettings.soundType, currentSettings.soundVolume);
 }
 
 // Update progress ring

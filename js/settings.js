@@ -168,7 +168,7 @@ class SettingsManager {
                 soundEnabled: true,
                 showTimeInTitle: true,
                 autoStartEnabled: false,
-                soundType: 'beep',
+                soundType: 'bell',
                 soundVolume: 0.75,
                 theme: prefersDarkMode ? 'dark' : 'light'
             };
@@ -197,7 +197,7 @@ class SettingsManager {
             soundEnabled: true,
             showTimeInTitle: true,
             autoStartEnabled: false,
-            soundType: 'beep',
+            soundType: 'bell',
             soundVolume: 0.75,
             theme: 'light'
         };
