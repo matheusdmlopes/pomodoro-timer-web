@@ -326,7 +326,10 @@ function handleTimerComplete() {
 
     // Send browser notification if enabled
     if (window.notificationManager) {
+        console.log('Notificando conclusão do timer via NotificationManager');
         window.notificationManager.notifyTimerComplete(currentMode, completedSessions);
+    } else {
+        console.warn('NotificationManager não está disponível');
     }
 
     // Switch to next mode - auto-start is handled inside switchToNextMode

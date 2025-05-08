@@ -109,4 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function getTranslation(key) {
     const langData = translations[currentLang] || translations['pt'] || {}; // Fallback to pt
     return langData[key] || key; // Return key as fallback
-} 
+}
+
+// Create a global i18n object that notifications.js expects
+window.i18n = {
+    get: function (key) {
+        return getTranslation(key);
+    }
+}; 

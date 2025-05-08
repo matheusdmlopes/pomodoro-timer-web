@@ -216,6 +216,7 @@ class SettingsManager {
 
         // Atualizar o gerenciador de notificações se disponível
         if (window.notificationManager) {
+            console.log('Atualizando o gerenciador de notificações com configuração:', settings.browserNotificationsEnabled);
             window.notificationManager.setEnabled(settings.browserNotificationsEnabled);
         }
 
@@ -240,6 +241,7 @@ class SettingsManager {
 
         // Atualizar o gerenciador de notificações se disponível
         if (window.notificationManager) {
+            console.log('Atualizando o gerenciador de notificações com configuração:', settings.browserNotificationsEnabled);
             window.notificationManager.setEnabled(settings.browserNotificationsEnabled);
         }
 
