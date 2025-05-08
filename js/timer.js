@@ -75,7 +75,6 @@ let settings = {
     workDuration: 25,
     shortBreakDuration: 5,
     longBreakDuration: 15,
-    soundEnabled: true,
     showTimeInTitle: true,
     autoStartEnabled: false,
     soundType: 'bell',
@@ -319,19 +318,43 @@ function resetTimer() {
 function handleTimerComplete() {
     if (currentMode === TIMER_MODES.POMODORO) {
         completedSessions++;
-        sessionCountElement.textContent = completedSessions; // Session count isn't translated
+        sessionCountElement.textContent = completedSessions;
+    }
 
-        // Track session completion (optional)
-        // if (typeof trackEvent === 'function') {
-        //     trackEvent('Session', 'Complete', `Session #${completedSessions}`);
-        // }
+    // Play notification sound
+    playNotificationSound();
 
+    // Send browser notification if enabled
+    if (window.notificationManager) {
+        window.notificationManager.notifyTimerComplete(currentMode, completedSessions);
+    }
+
+    // Auto-start next session if enabled
+    if (settings.autoStartEnabled) {
+        // Switch mode and start
+        switchToNextMode();
+        startTimer();
+    } else {
+        // Just switch mode but don't start
+        switchToNextMode();
+    }
+
+    // Track event
+    trackEvent('Timer', 'Complete', `${currentMode} completed`);
+}
+
+// Switch to the next mode based on the current mode
+function switchToNextMode() {
+    if (currentMode === TIMER_MODES.POMODORO) {
+        // After a pomodoro, switch to short break or long break
+        // Long break after every 4 pomodoros (0-based index, so check for multiples of 4)
         if (completedSessions % 4 === 0) {
             switchMode(TIMER_MODES.LONG_BREAK);
         } else {
             switchMode(TIMER_MODES.SHORT_BREAK);
         }
     } else {
+        // After any break, switch to pomodoro
         switchMode(TIMER_MODES.POMODORO);
     }
 
@@ -375,7 +398,8 @@ function playNotificationSound(tempSettings) {
     // Use temporary settings if provided, otherwise use current settings
     const currentSettings = tempSettings || settings;
 
-    if (!currentSettings.soundEnabled) return;
+    // Apenas reproduzir o som se o volume for maior que zero
+    if (currentSettings.soundVolume <= 0) return;
 
     // Use the sound manager to play the sound
     soundManager.play(currentSettings.soundType, currentSettings.soundVolume);

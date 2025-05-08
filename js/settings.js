@@ -65,7 +65,6 @@ class SettingsManager {
             this.testSoundBtn.addEventListener('click', () => {
                 // Create temporary settings object with current form values
                 const tempSettings = {
-                    soundEnabled: true, // Force enabled for testing
                     soundType: document.getElementById('sound-type').value,
                     soundVolume: parseFloat(document.getElementById('sound-volume').value)
                 };
@@ -115,6 +114,9 @@ class SettingsManager {
 
     // Fallback function to play sound if window.timer is not available
     playTestSound(settings) {
+        // Se o volume for zero, não reproduzir o som
+        if (settings.soundVolume <= 0) return;
+
         // Define sound configurations
         const SOUND_CONFIGS = {
             beep: {
@@ -165,9 +167,9 @@ class SettingsManager {
                 workDuration: 25,
                 shortBreakDuration: 5,
                 longBreakDuration: 15,
-                soundEnabled: true,
                 showTimeInTitle: true,
                 autoStartEnabled: false,
+                browserNotificationsEnabled: false,
                 soundType: 'bell',
                 soundVolume: 0.75,
                 theme: prefersDarkMode ? 'dark' : 'light'
@@ -194,9 +196,9 @@ class SettingsManager {
             workDuration: 25,
             shortBreakDuration: 5,
             longBreakDuration: 15,
-            soundEnabled: true,
             showTimeInTitle: true,
             autoStartEnabled: false,
+            browserNotificationsEnabled: false,
             soundType: 'bell',
             soundVolume: 0.75,
             theme: 'light'
@@ -205,12 +207,17 @@ class SettingsManager {
         document.getElementById('work-duration').value = settings.workDuration;
         document.getElementById('short-break-duration').value = settings.shortBreakDuration;
         document.getElementById('long-break-duration').value = settings.longBreakDuration;
-        document.getElementById('sound-enabled').checked = settings.soundEnabled;
         document.getElementById('show-time-in-title').checked = settings.showTimeInTitle;
         document.getElementById('auto-start-enabled').checked = settings.autoStartEnabled !== undefined ? settings.autoStartEnabled : false;
+        document.getElementById('browser-notifications-enabled').checked = settings.browserNotificationsEnabled !== undefined ? settings.browserNotificationsEnabled : false;
         document.getElementById('sound-type').value = settings.soundType;
         document.getElementById('sound-volume').value = settings.soundVolume;
         document.getElementById('theme-select').value = settings.theme || 'light';
+
+        // Atualizar o gerenciador de notificações se disponível
+        if (window.notificationManager) {
+            window.notificationManager.setEnabled(settings.browserNotificationsEnabled);
+        }
 
         return settings;
     }
@@ -220,9 +227,9 @@ class SettingsManager {
             workDuration: parseInt(document.getElementById('work-duration').value),
             shortBreakDuration: parseInt(document.getElementById('short-break-duration').value),
             longBreakDuration: parseInt(document.getElementById('long-break-duration').value),
-            soundEnabled: document.getElementById('sound-enabled').checked,
             showTimeInTitle: document.getElementById('show-time-in-title').checked,
             autoStartEnabled: document.getElementById('auto-start-enabled').checked,
+            browserNotificationsEnabled: document.getElementById('browser-notifications-enabled').checked,
             soundType: document.getElementById('sound-type').value,
             soundVolume: parseFloat(document.getElementById('sound-volume').value),
             theme: document.getElementById('theme-select').value
@@ -230,6 +237,11 @@ class SettingsManager {
 
         localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
         this.applyTheme(settings.theme);
+
+        // Atualizar o gerenciador de notificações se disponível
+        if (window.notificationManager) {
+            window.notificationManager.setEnabled(settings.browserNotificationsEnabled);
+        }
 
         // Update timer settings and display
         if (window.timer) {
@@ -242,4 +254,7 @@ class SettingsManager {
 let settingsManager;
 document.addEventListener('DOMContentLoaded', () => {
     settingsManager = new SettingsManager();
+
+    // Expor para uso global
+    window.settingsManager = settingsManager;
 }); 
