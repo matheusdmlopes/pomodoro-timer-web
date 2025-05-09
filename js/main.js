@@ -57,18 +57,8 @@ function loadTimerState() {
 
 // Initialize app
 function initApp() {
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => {
-                    console.log('ServiceWorker registration successful');
-                })
-                .catch(err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-        });
-    }
+    // O Service Worker agora é gerenciado pelo ServiceWorkerManager
+    // Não é mais necessário registrá-lo aqui, pois isso é feito no ServiceWorkerManager.js
 
     // Set up event listeners for beforeunload to save state
     window.addEventListener('beforeunload', saveTimerState);

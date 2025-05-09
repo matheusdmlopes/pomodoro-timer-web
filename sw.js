@@ -9,6 +9,7 @@ const urlsToCache = [
     '/js/tasks.js',
     '/js/settings.js',
     '/js/notifications.js',
+    '/js/ServiceWorkerManager.js',
     '/js/i18n.js',
     '/manifest.json',
     '/assets/favicon.ico',
