@@ -14,46 +14,25 @@ class NotificationManager {
         // Inicializar se o navegador suportar notificações
         if (this.isSupported) {
             this.checkPermission();
-            // Não é mais necessário inicializar o Service Worker aqui
-            // Vamos apenas configurar para usá-lo quando estiver disponível
+            this.initServiceWorker();
         } else {
             console.warn('Este navegador não suporta notificações.');
         }
     }
 
     /**
-     * Obtém o registro do Service Worker do gerenciador centralizado
-     * @returns {Promise<ServiceWorkerRegistration|null>} Promessa resolvida com o registro ou null
+     * Inicializa o registro do Service Worker se disponível
      */
-    async getServiceWorkerRegistration() {
-        // Se já tivermos uma referência, retorná-la
-        if (this.serviceWorkerRegistration) {
-            return this.serviceWorkerRegistration;
-        }
-
-        // Se o gerenciador de Service Worker estiver disponível, pedir o registro
-        if (window.serviceWorkerManager) {
-            try {
-                this.serviceWorkerRegistration = await window.serviceWorkerManager.whenReady();
-                return this.serviceWorkerRegistration;
-            } catch (error) {
-                console.error('Erro ao obter registro do Service Worker:', error);
-                return null;
-            }
-        }
-
-        // Fallback para o método antigo se o gerenciador não estiver disponível
+    async initServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
                 this.serviceWorkerRegistration = await navigator.serviceWorker.ready;
-                return this.serviceWorkerRegistration;
+                console.log('Service Worker está pronto para notificações');
             } catch (error) {
-                console.error('Erro ao obter registro do Service Worker (fallback):', error);
-                return null;
+                console.error('Erro ao obter registro do Service Worker:', error);
+                this.serviceWorkerRegistration = null;
             }
         }
-
-        return null;
     }
 
     /**
@@ -82,9 +61,9 @@ class NotificationManager {
             this.permissionGranted = permission === 'granted';
             console.log('Permissão de notificação:', permission);
 
-            // Se a permissão foi concedida, garantir que temos o registro do Service Worker
-            if (this.permissionGranted) {
-                await this.getServiceWorkerRegistration();
+            // Se a permissão foi concedida, inicializar o service worker
+            if (this.permissionGranted && !this.serviceWorkerRegistration) {
+                await this.initServiceWorker();
             }
 
             return this.permissionGranted;
@@ -160,11 +139,6 @@ class NotificationManager {
 
         try {
             console.log('Enviando notificação:', title, notificationOptions);
-
-            // Obter o registro do Service Worker se necessário para actions
-            if (notificationOptions.actions && !this.serviceWorkerRegistration) {
-                this.serviceWorkerRegistration = await this.getServiceWorkerRegistration();
-            }
 
             // Verificar se temos Service Worker disponível para notificações com ações
             if (this.serviceWorkerRegistration && notificationOptions.actions) {
@@ -272,20 +246,18 @@ class NotificationManager {
                 }
             };
 
-            // Verificar se o Service Worker está disponível para adicionar ações
-            this.getServiceWorkerRegistration().then(registration => {
-                if (registration) {
-                    options.actions = [
-                        {
-                            action: 'start-next',
-                            title: i18n.get('notificationStart')
-                        }
-                    ];
-                }
+            // Adicionar ações apenas se o Service Worker estiver disponível
+            if (this.serviceWorkerRegistration) {
+                options.actions = [
+                    {
+                        action: 'start-next',
+                        title: i18n.get('notificationStart')
+                    }
+                ];
+            }
 
-                // Enviar notificação
-                this.sendNotification(title, options);
-            });
+            // Enviar notificação
+            this.sendNotification(title, options);
         } catch (error) {
             console.error('Erro ao processar notificação:', error);
 
@@ -351,26 +323,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Configurar listener para mensagens do Service Worker via ServiceWorkerManager
-    if (window.serviceWorkerManager) {
-        // Usar o novo gerenciador para receber mensagens
-        window.serviceWorkerManager.onMessage(event => {
+    // Configurar listener para mensagens do Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', event => {
             if (event.data && event.data.action === 'start-timer') {
                 if (window.timer && typeof window.timer.start === 'function') {
                     window.timer.start();
                 }
             }
         });
-    } else {
-        // Fallback para o método antigo
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.addEventListener('message', event => {
-                if (event.data && event.data.action === 'start-timer') {
-                    if (window.timer && typeof window.timer.start === 'function') {
-                        window.timer.start();
-                    }
-                }
-            });
-        }
     }
 }); 
